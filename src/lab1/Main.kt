@@ -119,6 +119,7 @@ fun calculatePerimeterWithCondition(firstPoint: Pair<Double, Double>,
 
 fun isIntersect(first: Array<Pair<Double,Double>>, second: Array<Pair<Double, Double>>) : Pair<Boolean, Double?>{
 
-    //TODO: Реализовать функцию проверки пересечения
+    //TODO: Придумать реализацию
+
     return Pair(false, null)
 }
