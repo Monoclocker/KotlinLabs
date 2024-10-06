@@ -4,10 +4,10 @@ class Electronics(productId: Int, name: String, price: Double, description: Stri
     private val warrantyPeriod: String) : Product(productId, name, price, description){
 
     override fun displayInfo() {
-        println("$productId : $name\n" +
+        println("$productId : $name\t" +
                 "$price\n" +
                 "Изготовитель: $brand\n" +
                 "Срок годности $warrantyPeriod\n" +
-                "Описание: ${description ?: "У товара нет описания"}")
+                "Описание: ${description ?: "У товара нет описания"}\n")
     }
 }

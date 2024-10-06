@@ -4,11 +4,11 @@ class Book(productId: Int, name: String, price: Double, description: String?, pr
            private val publisher: String, private val genre: String) : Product(productId, name, price, description){
 
     override fun displayInfo() {
-        println("$productId : $name\n" +
+        println("$productId : $name\t" +
                 "$price\n" +
                 "Автор: $author\n" +
                 "Издатель $publisher\n" +
                 "Жанр: $genre\n" +
-                "Описание: ${description ?: "У товара нет описания"}")
+                "Описание: ${description ?: "У товара нет описания"} \n")
     }
 }
