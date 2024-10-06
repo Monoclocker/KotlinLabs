@@ -4,67 +4,78 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 fun main(){
+    while (true){
+        try{
+            var firstFigure: Array<Pair<Double, Double>> = emptyArray<Pair<Double, Double>>()
+            var secondFigure : Array<Pair<Double, Double>> = emptyArray<Pair<Double, Double>>()
 
-    var firstFigure: Array<Pair<Double, Double>> = emptyArray<Pair<Double, Double>>()
-    var secondFigure : Array<Pair<Double, Double>> = emptyArray<Pair<Double, Double>>()
+            println("Первый многоугольник")
 
-    println("Первый многоугольник")
+            while(true){
+                println("Добавить точку - 1, перейти к вводу точек второго многоугольника - любая другая кнопка \n" +
+                        "Текущее количество точек ${firstFigure.size}")
+                val userChoice: String = readln()
 
-    while(true){
-        println("Добавить точку - 1, перейти к вводу точек второго многоугольника - любая другая кнопка \n" +
-                "Текущее количество точек ${firstFigure.size}")
-        val userChoice: String = readln()
-
-        when (userChoice){
-            "1" -> firstFigure += coordinatesInput()
-            else -> {
-                if (firstFigure.size < 3){
-                    println("Мало точек для создания многоугольника")
-                    continue
+                when (userChoice){
+                    "1" -> firstFigure += coordinatesInput()
+                    else -> {
+                        if (firstFigure.size < 3){
+                            println("Мало точек для создания многоугольника")
+                            continue
+                        }
+                        break
+                    }
                 }
-                break
             }
+
+            println("Второй многоугольник")
+
+            while(true){
+                println("Добавить точку - 1, перейти к рассчётам - любая другая кнопка \n" +
+                        "Текущее количество точек ${secondFigure.size}")
+
+                val userChoice: String = readln()
+
+                when (userChoice){
+                    "1" -> secondFigure += coordinatesInput()
+                    else -> {
+                        if (secondFigure.size < 3){
+                            println("Мало точек для создания многоугольника")
+                            continue
+                        }
+                        break
+                    }
+                }
+            }
+
+            val firstFigureCalculations = calculateSquareAndPerimeter(*firstFigure)
+
+            println("Площадь первой фигуры: ${firstFigureCalculations.first} \n" +
+                    "Периметр первой фигуры: ${firstFigureCalculations.second}")
+
+            val secondFigureCalculations = calculateSquareAndPerimeter(*secondFigure)
+
+            println("Площадь второй фигуры: ${secondFigureCalculations.first} \n" +
+                    "Периметр второй фигуры: ${secondFigureCalculations.second}")
+
+            val intersectionResult = isIntersect(firstFigure, secondFigure)
+
+            if (!intersectionResult.first){
+                println("Фигуры не пересекаются")
+                return
+            }
+
+            println("Фигуры пересекаются, площадь области пересечения: ${intersectionResult.second}")
+            break
+        }
+        catch (e: Exception){
+            println("Произошла ошибка")
+            println(e.message)
+            println(e.stackTrace)
+            println("Повторите попытку")
         }
     }
 
-    println("Второй многоугольник")
-
-    while(true){
-        println("Добавить точку - 1, перейти к рассчётам - любая другая кнопка \n" +
-                "Текущее количество точек ${secondFigure.size}")
-
-        val userChoice: String = readln()
-
-        when (userChoice){
-            "1" -> secondFigure += coordinatesInput()
-            else -> {
-                if (secondFigure.size < 3){
-                    println("Мало точек для создания многоугольника")
-                    continue
-                }
-                break
-            }
-        }
-    }
-
-    val firstFigureCalculations = calculateSquareAndPerimeter(*firstFigure)
-
-    println("Площадь первой фигуры: ${firstFigureCalculations.first} \n" +
-            "Периметр первой фигуры: ${firstFigureCalculations.second}")
-
-    val secondFigureCalculations = calculateSquareAndPerimeter(*secondFigure)
-
-    println("Площадь второй фигуры: ${secondFigureCalculations.first} \n" +
-            "Периметр второй фигуры: ${secondFigureCalculations.second}")
-
-    val intersectionResult = isIntersect(firstFigure, secondFigure)
-
-    if (!intersectionResult.first){
-        println("Фигуры не пересекаются")
-        return
-    }
-
-    println("Фигуры пересекаются, площадь области пересечения: ${intersectionResult.second}")
 }
 
 fun coordinatesInput(): Pair<Double, Double> {

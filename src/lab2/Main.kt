@@ -15,7 +15,20 @@ val Catalog: Array<Product> = arrayOf(
 )
 
 fun main(){
-    menu()
+    while (true){
+        try{
+            menu()
+            break
+        }
+        catch (e: Exception){
+            println("Произошла ошибка")
+            println(e.message)
+            println(e.stackTrace)
+            println("Повторите поптыку")
+        }
+    }
+
+
 }
 
 fun menu(){
