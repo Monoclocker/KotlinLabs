@@ -71,7 +71,7 @@ fun main(){
         catch (e: Exception){
             println("Произошла ошибка")
             println(e.message)
-            println(e.stackTrace)
+            println(e.stackTrace.forEach { println(it) })
             println("Повторите попытку")
         }
     }
@@ -112,18 +112,14 @@ fun calculateSquareAndPerimeter(vararg points: Pair<Double, Double>) : Pair<Doub
     var perimeter = .0
     var square = .0
 
-    for (pointNum in 0 ..< points.size-1){
+    for (pointNum in points.indices){
 
-        perimeter += calculatePerimeterWithCondition(points[pointNum], points[pointNum+1])
+        perimeter += calculatePerimeterWithCondition(points[pointNum % (points.size-1)],
+            points[(pointNum+1) % points.size])
 
-        square += points[pointNum].first * points[pointNum+1].second -
-                points[pointNum].second * points[pointNum+1].first
+        square += points[pointNum % points.size].first * points[(pointNum+1) % points.size].second -
+                points[pointNum % points.size].second * points[(pointNum+1) % points.size].first
     }
-
-    perimeter += calculatePerimeterWithCondition(points[points.size-1], points[0])
-
-    square += points[points.size-1].first * points[0].second -
-            points[points.size-1].second * points[0].first
 
     return Pair(0.5 * abs(square), perimeter)
 }
@@ -170,7 +166,7 @@ fun areIntersecting(p1: Pair<Double,Double>, p2: Pair<Double,Double>, q1: Pair<D
         return if (onSegment1 && onSegment2) {
             Pair(x, y)
         } else {
-            null // Точка пересечения не находится на обоих отрезках
+            null
         }
     }
 }
@@ -231,15 +227,18 @@ fun isIntersect(first: Array<Pair<Double,Double>>, second: Array<Pair<Double, Do
 
     var intersectionPoints: Array<Pair<Double, Double>> = emptyArray()
 
-    val firstSize = firstClone.size - 1
-    val secondSize = secondClone.size - 1
+    val firstSize = firstClone.size
+    val secondSize = secondClone.size
 
     for(secondPointNum in secondClone.indices){
 
         for (firstPointNum in firstClone.indices){
 
+            //TODO: Сделать считывание точки внутри многоугольника
+
             if (intersectionMeansExit){
                 intersectionPoints += Pair(secondClone[secondPointNum].first, secondClone[secondPointNum].second)
+
             }
 
             val intersectionPoint = areIntersecting(secondClone[secondPointNum % secondSize],
