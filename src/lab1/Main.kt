@@ -189,57 +189,52 @@ fun isPointInsidePolygon(point: Pair<Double, Double>, polygon: Array<Pair<Double
     return intersections % 2 != 0
 }
 
-fun isIntersect(first: Array<Pair<Double,Double>>, second: Array<Pair<Double, Double>>) : Pair<Boolean, Double?>{
+fun isIntersect(first: Array<Pair<Double,Double>>, second: Array<Pair<Double, Double>>)
+    : Pair<Boolean, Double?>{
 
     val firstClone = first.clone()
     val secondClone = second.clone()
 
-    var shouldReverse = false
+    var indicator = .0
 
     for (pointNum in first.indices){
-        if (first[pointNum].first > first[pointNum + 1].first)
-            shouldReverse = true
-        break
+        indicator += (first[(pointNum+1) % first.size].first - first[pointNum % first.size].first) *
+                (first[(pointNum+1) % first.size].second + first[pointNum % first.size].second)
     }
 
-    if(shouldReverse){
+    if(indicator < 0){
         firstClone.reverse()
-        shouldReverse = false
     }
+
+    indicator = .0
 
     for (pointNum in second.indices){
-        if (second[pointNum].first > second[pointNum + 1].first)
-            shouldReverse = true
-        break
+        indicator += (second[(pointNum+1) % second.size].first - second[pointNum % second.size].first) *
+                (second[(pointNum+1) % second.size].second + second[pointNum % second.size].second)
     }
 
-    if (shouldReverse){
+    if (indicator < 0){
         secondClone.reverse()
     }
 
-    val haveOutsideArea: Boolean = secondClone.any { !isPointInsidePolygon(it, firstClone) }
-
-    if (!haveOutsideArea){
-        return Pair(true, calculateSquareAndPerimeter(*secondClone).first)
-    }
+//    if (first.contentEquals(second)){
+//        return Pair(true, calculateSquareAndPerimeter(*first).first)
+//    }
 
     var intersectionMeansExit: Boolean = isPointInsidePolygon(secondClone.first(), firstClone)
 
-    var intersectionPoints: Array<Pair<Double, Double>> = emptyArray()
+    var firstPolygonExtendedArray: Array<Triple<Double, Double, Boolean?>> = emptyArray()
+    var secondPolygonExtendedArray: Array<Triple<Double, Double, Boolean?>> = emptyArray()
 
     val firstSize = firstClone.size
     val secondSize = secondClone.size
 
     for(secondPointNum in secondClone.indices){
 
+        secondPolygonExtendedArray +=
+            Triple(secondClone[secondPointNum].first, secondClone[secondPointNum].second, null)
+
         for (firstPointNum in firstClone.indices){
-
-            //TODO: Сделать считывание точки внутри многоугольника
-
-            if (intersectionMeansExit){
-                intersectionPoints += Pair(secondClone[secondPointNum].first, secondClone[secondPointNum].second)
-
-            }
 
             val intersectionPoint = areIntersecting(secondClone[secondPointNum % secondSize],
                 secondClone[(secondPointNum + 1) %  secondSize], firstClone[firstPointNum % firstSize],
@@ -249,12 +244,61 @@ fun isIntersect(first: Array<Pair<Double,Double>>, second: Array<Pair<Double, Do
                 continue
             }
 
-            intersectionPoints += Pair(intersectionPoint.first, intersectionPoint.second)
+            secondPolygonExtendedArray += Triple(intersectionPoint.first,
+                intersectionPoint.second, intersectionMeansExit)
             intersectionMeansExit = !intersectionMeansExit
         }
     }
 
-    if (intersectionPoints.contentEquals(secondClone)){
+    for(firstPointNum in firstClone.indices){
+
+        firstPolygonExtendedArray +=
+            Triple(firstClone[firstPointNum].first, firstClone[firstPointNum].second, null)
+
+        for (secondPointNum in secondClone.indices){
+
+            val intersectionPoint = areIntersecting(secondClone[secondPointNum % secondSize],
+                secondClone[(secondPointNum + 1) %  secondSize], firstClone[firstPointNum % firstSize],
+                firstClone[(firstPointNum + 1) % firstSize])
+
+            if (intersectionPoint == null){
+                continue
+            }
+
+            firstPolygonExtendedArray += secondPolygonExtendedArray.first {
+                it.first == intersectionPoint.first && it.second == intersectionPoint.second
+            }
+        }
+    }
+
+    val point = secondPolygonExtendedArray.first{ it.third == false }
+
+    var intersectionPoints: Array<Pair<Double,Double>> = arrayOf(Pair(point.first, point.second))
+
+    var pointIndex = (secondPolygonExtendedArray.indexOf(point) + 1) % secondPolygonExtendedArray.size
+    var currentPoint = secondPolygonExtendedArray[pointIndex]
+
+    var observablePoligon = secondPolygonExtendedArray.clone()
+    var isFirstObserved = false
+
+    while (currentPoint != point){
+
+        intersectionPoints += Pair(currentPoint.first, currentPoint.second)
+
+        if (currentPoint.third != null){
+            observablePoligon = when (isFirstObserved) {
+                true -> secondPolygonExtendedArray.clone()
+                false -> firstPolygonExtendedArray.clone()
+            }
+            isFirstObserved = !isFirstObserved
+        }
+
+        currentPoint = observablePoligon.first { it == currentPoint }
+        pointIndex = (observablePoligon.indexOf(currentPoint) + 1) % observablePoligon.size
+        currentPoint = observablePoligon[pointIndex]
+    }
+
+    if (intersectionPoints.isEmpty()){
         return Pair(false, null)
     }
 
