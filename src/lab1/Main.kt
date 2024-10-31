@@ -174,83 +174,9 @@ fun areIntersecting(p1: Pair<Double,Double>, p2: Pair<Double,Double>, q1: Pair<D
     }
 }
 
-fun isPointInsidePolygon(point: Pair<Double, Double>, polygon: Array<Pair<Double, Double>>): Boolean {
-    var intersections = 0
-    val size = polygon.size
-    for (i in polygon.indices) {
-        val p1 = polygon[i]
-        val p2 = polygon[(i + 1) % size]
-
-        if ((point.second > minOf(p1.second, p2.second)) && (point.second <= maxOf(p1.second, p2.second)) &&
-            (point.first <= maxOf(p1.first, p2.first))) {
-            val xIntersections = (point.second - p1.second) * (p2.first - p1.first) / (p2.second - p1.second) + p1.first
-            if (p1.first == p2.first || point.first <= xIntersections) {
-                intersections++
-            }
-        }
-    }
-    return intersections % 2 != 0
-}
-
-fun isIntersect(first: Array<Pair<Double,Double>>, second: Array<Pair<Double, Double>>)
-        : Pair<Boolean, Double?> {
-
-    if (second.all { isPointInsidePolygon(it, first) }){
-        return Pair(true, calculateSquareAndPerimeter(*second).first)
-    }
-
-    if (first.all { isPointInsidePolygon(it, second) }){
-        return Pair(true, calculateSquareAndPerimeter(*first).first)
-    }
-
-    if (first.contentEquals(second)){
-        return Pair(true, calculateSquareAndPerimeter(*first).first)
-    }
-
-    val firstClone = first.clone()
-    val secondClone = second.clone()
-
-    if (!isClockwise(firstClone)) {
-        firstClone.reverse()
-    }
-    if (!isClockwise(secondClone)) {
-        secondClone.reverse()
-    }
-    val intersectionPoints = mutableListOf<Pair<Double, Double>>()
-
-    for (i in firstClone.indices) {
-        for (j in secondClone.indices) {
-            val intersection = areIntersecting(
-                firstClone[i], firstClone[(i + 1) % firstClone.size],
-                secondClone[j], secondClone[(j + 1) % secondClone.size]
-            )
-            if (intersection != null) {
-                intersectionPoints.add(intersection)
-            }
-        }
-    }
-
-    for (point in firstClone) {
-        if (isPointInsidePolygon(point, secondClone)) {
-            intersectionPoints.add(point)
-        }
-    }
-
-    for (point in secondClone) {
-        if (isPointInsidePolygon(point, firstClone)) {
-            intersectionPoints.add(point)
-        }
-    }
-
-    if (intersectionPoints.isEmpty()) {
-        return Pair(false, null)
-    }
-
-    intersectionPoints.sortWith(compareBy({ it.first }, { it.second }))
-
-    val area = calculateSquareAndPerimeter(*(intersectionPoints.toTypedArray()))
-
-    return Pair(true, area.first)
+fun isInside(point: Pair<Double,Double>, edgeStart: Pair<Double,Double>, edgeEnd: Pair<Double,Double>): Boolean {
+    return (edgeEnd.first - edgeStart.first) * (point.second - edgeStart.second) -
+            (edgeEnd.second - edgeStart.second) * (point.first - edgeStart.first) >= 0
 }
 
 fun isClockwise(polygon: Array<Pair<Double, Double>>): Boolean {
@@ -261,4 +187,48 @@ fun isClockwise(polygon: Array<Pair<Double, Double>>): Boolean {
         sum += (x2 - x1) * (y2 + y1)
     }
     return sum > 0
+}
+
+fun isIntersect(subjectPolygon: Array<Pair<Double, Double>>, clipPolygon: Array<Pair<Double, Double>>): Pair<Boolean, Double?> {
+
+    if (isClockwise(subjectPolygon)) {
+        subjectPolygon.reverse()
+    }
+    if (isClockwise(clipPolygon)) {
+        clipPolygon.reverse()
+    }
+
+    var clipped = subjectPolygon.toList()
+
+    for (edgeIndex in clipPolygon.indices) {
+        val inputList: MutableList<Pair<Double,Double>> = mutableListOf()
+        inputList.addAll(clipped)
+        clipped = mutableListOf()
+
+        val clipEdgeStart = clipPolygon[edgeIndex]
+        val clipEdgeEnd = clipPolygon[(edgeIndex + 1) % clipPolygon.size]
+
+        for (i in inputList.indices) {
+            val currentPoint = inputList[i]
+            val prevPoint = inputList[(i - 1 + inputList.size) % inputList.size]
+
+            val currentInside = isInside(currentPoint, clipEdgeStart, clipEdgeEnd)
+            val prevInside = isInside(prevPoint, clipEdgeStart, clipEdgeEnd)
+
+            if (currentInside) {
+                if (!prevInside) {
+                    areIntersecting(prevPoint, currentPoint, clipEdgeStart, clipEdgeEnd)?.let { clipped.add(it) }
+                }
+                clipped.add(currentPoint)
+            } else if (prevInside) {
+                areIntersecting(prevPoint, currentPoint, clipEdgeStart, clipEdgeEnd)?.let { clipped.add(it) }
+            }
+        }
+    }
+
+    if (clipped.isEmpty()) return Pair(false, null)
+
+    val area = calculateSquareAndPerimeter(*clipped.toTypedArray()).first
+
+    return if (area != 0.0) Pair(true, area) else Pair(false, null)
 }
